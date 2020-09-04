@@ -1,47 +1,33 @@
-const http = require('http');
+const request = require('request');
 const newman = require('newman');
 const Collection = require('postman-collection').Collection;
 
 const host = process.env['api_host'];
 const port = process.env['api_port'];
 const headers = { Authorization: `Bearer ${process.env['jwt_token']}` }
+let projectId;
 
-const optionsInit = {
-    host,
-    port,
-    path: `/repositories/${process.env['repo_id']}/id`,
-    headers
+request({
+            url: `http://${host}:${port}/repositories/${process.env['repo_id']}/id`,
+            method: 'GET',
+            headers: headers
+        },
+        (error, response, body) => {
+            projectId = parseInt(JSON.parse(body).data);
+            request({
+                url: `http://${host}:${port}/export_to_postman/${projectId}`,
+                method: 'GET',
+                headers: headers
+            }, cbForCollection);
+        });
+
+const cbForCollection = function(error, response, body) {
+    const collection = JSON.parse(body).data;
+    runNewman(collection);
 }
 
-const callbackInit = function(response) {
-    var resp = '';
-    response.on('data', function (chunk) {
-        resp += chunk;
-    });
-    response.on('end', function () {
-        const projectId = parseInt(JSON.parse(resp).data);
-        http.request(optionsForCollection(projectId), cbForCollection).end();
-    });
-}
-
-const cbForCollection = function(response) {
-    var resp = '';
-    response.on('data', function (chunk) {
-        resp += chunk;
-    });
-    response.on('end', function () {
-        const collection = JSON.parse(resp).data;
-        runNewman(collection);
-    });
-}
-
-function optionsForCollection(projectId) {
-    return {
-        host,
-        port,
-        path: `/export_to_postman/${projectId}`,
-        headers
-    }
+function buildOptions(path) {
+    return { host, port, path, headers }
 }
 
 function runNewman(collection) {
@@ -52,8 +38,26 @@ function runNewman(collection) {
         if (err) { throw err; }
         const total = summary.run.stats.assertions.total;
         const failed = summary.run.stats.assertions.failed;
-        console.log(`${failed}/${total} assertions failed.`);
+        request({
+            url: `http://${host}:${port}/testResults`,
+            method: 'POST',
+            headers,
+            json: true,
+            body: { project_id: projectId,
+                total: total,
+                fail: failed
+            }
+        }, cbPostResult
+        );
     });
 }
 
-http.request(optionsInit, callbackInit).end();
+const cbPostResult = function(error, response, body) {
+    if (body.message == 'success') {
+        process.exit(0);
+    } else {
+        console.log(resp);
+        process.exit(1);
+    }
+}
+
