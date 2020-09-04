@@ -1,12 +1,13 @@
 {
-  "name": "newman-reader",
+  "name": "newman-runner",
   "version": "0.0.0",
   "description": "",
   "main": "app.js",
   "author": "",
   "license": "",
   "dependencies": {
+    "newman": "^5.2.0",
+    "postman-collection": "^3.6.6"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
