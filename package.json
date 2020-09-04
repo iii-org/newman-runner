@@ -1,0 +1,12 @@
+{
+  "name": "newman-reader",
+  "version": "0.0.0",
+  "description": "",
+  "main": "app.js",
+  "author": "",
+  "license": "",
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
