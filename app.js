@@ -9,8 +9,8 @@ const headers = { Authorization: `Bearer ${process.env['jwt_token']}` }
 let projectId;
 
 fetch(`http://${host}:${port}/repositories/${process.env['repo_id']}/id`, {
-            method: 'GET',
-            headers: headers
+        method: 'GET',
+        headers: headers
     })
     .then(res => res.json())
     .then(json => {
@@ -31,7 +31,6 @@ function buildOptions(path) {
 }
 
 function runNewman(collection) {
-    // console.log(collection);
     newman.run({
         collection: new Collection(collection)
     }, (err, summary) => {
