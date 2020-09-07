@@ -1,14 +1,14 @@
 {
   "name": "newman-runner",
-  "version": "0.0.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "Run newman test assertions then push back to api server",
   "main": "app.js",
-  "author": "",
-  "license": "",
+  "author": "Romulus Urakagi Tsai",
+  "license": "Apache-2.0",
   "dependencies": {
     "newman": "^5.2.0",
-    "postman-collection": "^3.6.6",
-    "request": "^2.88.2"
+    "node-fetch": "^2.6.1",
+    "postman-collection": "^3.6.6"
   },
   "devDependencies": {}
 }
