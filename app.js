@@ -3,19 +3,18 @@ const { URLSearchParams } = require('url');
 const newman = require('newman');
 const Collection = require('postman-collection').Collection;
 
-const host = process.env['api_host'];
-const port = process.env['api_port'];
+const origin = process.env['api_origin'];
 const headers = { Authorization: `Bearer ${process.env['jwt_token']}` }
 let projectId;
 
-fetch(`http://${host}:${port}/repositories/${process.env['repo_id']}/id`, {
+fetch(`${origin}/repositories/${process.env['repo_id']}/id`, {
         method: 'GET',
         headers: headers
     })
     .then(res => res.json())
     .then(json => {
         projectId = json.data;
-        fetch(`http://${host}:${port}/export_to_postman/${projectId}`,
+        fetch(`${origin}/export_to_postman/${projectId}`,
         {
             method: 'GET',
             headers: headers
@@ -42,7 +41,7 @@ function runNewman(collection) {
         params.append('total', total);
         params.append('fail', failed);
         fetch(
-            `http://${host}:${port}/testResults`,
+            `${origin}/testResults`,
             {
                 method: 'POST',
                 headers,
@@ -51,8 +50,10 @@ function runNewman(collection) {
         .then(res => res.json())
         .then(json => {
             if (json.message == 'success') {
+                console.log(`Project #${projectId} executed, ${failed}/${total} assertion failed.`);
                 process.exit(0);
             } else {
+                console.log("Error while executing, response=");
                 console.log(json);
                 process.exit(1);
             }
