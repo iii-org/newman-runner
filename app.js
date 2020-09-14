@@ -52,7 +52,6 @@ function getGitlabProjectId(page) {
 }
 
 function getProjectId(repoId) {
-  console.log(repoId);
   fetch(`${origin}/repositories/${repoId}/id`, {
           method: 'GET',
           headers: headers
