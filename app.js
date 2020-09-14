@@ -2,28 +2,75 @@ const fetch = require('node-fetch');
 const { URLSearchParams } = require('url');
 const newman = require('newman');
 const Collection = require('postman-collection').Collection;
+const parse = require('url-parse');
 
 const origin = process.env['api_origin'];
 const headers = { Authorization: `Bearer ${process.env['jwt_token']}` }
+const gitUrl = process.env.git_url;
+const gitPUrl = parse(gitUrl);
 let projectId;
 
-fetch(`${origin}/repositories/${process.env['repo_id']}/id`, {
-        method: 'GET',
-        headers: headers
+getGitlabProjectId(1)
+  .then(id => {
+		getProjectId(id);
+  })
+  .catch(err => {
+    console.error(err);
+  });
+
+function getGitlabProjectId(page) {
+  return new Promise((resolve, reject) => {
+    let ret = -1;
+    fetch(gitPUrl.origin +
+        '/api/v4/projects?simple=true&per_page=50&page=' + page,
+    {
+      headers: { 'PRIVATE-TOKEN': process.env.git_token }
     })
-    .then(res => res.json())
-    .then(json => {
-        projectId = json.data;
-        fetch(`${origin}/export_to_postman/${projectId}`,
-        {
-            method: 'GET',
-            headers: headers
-        })
-        .then(res => res.json())
-        .then(json => {
-            runNewman(json.data);
-        });
-    });
+      .then(res => res.json())
+      .then(json => {
+        for (p in json) {
+          const proj = json[p];
+          if (proj.http_url_to_repo == gitUrl) {
+            ret = proj.id;
+            break;
+          }
+        }
+        if (ret < 0) {
+          if (json.length < 20) {
+            reject(`Git URL ${gitUrl} not found!\nUse URL with suffix .git`);
+          } else {
+            getGitlabProjectId(page + 1)
+              .then(json => resolve(json));
+          }
+        }
+        resolve(ret);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
+}
+
+function getProjectId(repoId) {
+  console.log(repoId);
+  fetch(`${origin}/repositories/${repoId}/id`, {
+          method: 'GET',
+          headers: headers
+      })
+      .then(res => res.json())
+      .then(json => {
+          projectId = json.data;
+          fetch(`${origin}/export_to_postman/${projectId}`,
+          {
+              method: 'GET',
+              headers: headers
+          })
+          .then(res => res.json())
+          .then(json => {
+              runNewman(json.data);
+          });
+      });
+}
 
 function buildOptions(path) {
     return { host, port, path, headers }

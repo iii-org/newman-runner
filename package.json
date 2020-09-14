@@ -8,7 +8,8 @@
   "dependencies": {
     "newman": "^5.2.0",
     "node-fetch": "^2.6.1",
-    "postman-collection": "^3.6.6"
+    "postman-collection": "^3.6.6",
+    "url-parse": "^1.4.7"
   },
   "devDependencies": {}
 }
