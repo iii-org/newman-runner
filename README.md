@@ -7,7 +7,7 @@ $ docker pull iiiorg/newman-runner
 # Or use .env file by docker run --env-file=.env
 $ docker run \ 
   --env jwt-token=<jwt-token> \
-  --env repo_id=11 # github-repo-id \
+  --env git_url=http://10.50.1.53/root/rotest.git # Repo .git URL of gitlab \
   --env api_origin=http://127.0.0.1:10009 #origin of api server \
   iiiorg/newman-runner
 ```
