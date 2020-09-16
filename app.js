@@ -5,6 +5,7 @@ const Collection = require('postman-collection').Collection;
 const parse = require('url-parse');
 
 const origin = process.env['api_origin'];
+const target = process.env['test_origin'];
 const headers = { Authorization: `Bearer ${process.env['jwt_token']}` }
 const gitUrl = process.env.git_url;
 const gitPUrl = parse(gitUrl);
@@ -59,7 +60,8 @@ function getProjectId(repoId) {
       .then(res => res.json())
       .then(json => {
           projectId = json.data;
-          fetch(`${origin}/export_to_postman/${projectId}`,
+          fetch(`${origin}/export_to_postman/${projectId}?target=${
+            encodeURIComponent(target)}`,
           {
               method: 'GET',
               headers: headers
