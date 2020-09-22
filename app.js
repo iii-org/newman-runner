@@ -43,8 +43,9 @@ function getGitlabProjectId(page) {
             getGitlabProjectId(page + 1)
               .then(json => resolve(json));
           }
+        } else {
+          resolve(ret);
         }
-        resolve(ret);
       })
       .catch(err => {
         reject(err);
