@@ -7,12 +7,20 @@ const parse = require('url-parse');
 const origin = process.env['api_origin'];
 const target = process.env['test_origin'];
 const headers = { Authorization: `Bearer ${process.env['jwt_token']}` }
-const gitUrl = process.env.git_url;
+const gitUrl = process.env['git_url'];
 const gitPUrl = parse(gitUrl);
+const verbose = process.env['verbose'] == 'true';
 let projectId;
+
+if (verbose) {
+  console.log('jwt_token=' + process.env['jwt_token']);
+  console.log('git_token=' + process.env['git_token']);
+  console.log('Retrieving repo_id...');
+}
 
 getGitlabProjectId(1)
   .then(id => {
+    if (verbose) console.log('repo_id is ' + id);
 		getProjectId(id);
   })
   .catch(err => {
@@ -61,6 +69,7 @@ function getProjectId(repoId) {
       .then(res => res.json())
       .then(json => {
           projectId = json.data;
+          if (verbose) console.log('project id is ' + projectId);
           fetch(`${origin}/export_to_postman/${projectId}?target=${
             encodeURIComponent(target)}`,
           {
@@ -69,6 +78,10 @@ function getProjectId(repoId) {
           })
           .then(res => res.json())
           .then(json => {
+              if (verbose) {
+                console.log('collection json is:');
+                console.log(json.data);
+              }
               runNewman(json.data);
           });
       });
@@ -83,6 +96,10 @@ function runNewman(collection) {
         collection: new Collection(collection)
     }, (err, summary) => {
         if (err) { throw err; }
+        if (verbose) {
+          console.log('assertions is:');
+          console.log(summary.run.stats.assertions);
+        }
         const total = summary.run.stats.assertions.total;
         const failed = summary.run.stats.assertions.failed;
         const params = new URLSearchParams();
