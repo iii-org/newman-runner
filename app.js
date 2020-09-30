@@ -108,6 +108,7 @@ function runNewman(filename) {
         fs.unlink(filename, () => {});
         if (verbose) {
           console.log('assertions is:');
+          console.log(summary);
           console.log(summary.run.stats.assertions);
         }
         const total = summary.run.stats.assertions.total;
