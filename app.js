@@ -1,8 +1,8 @@
 const fetch = require('node-fetch');
 const { URLSearchParams } = require('url');
 const newman = require('newman');
-const Collection = require('postman-collection').Collection;
 const parse = require('url-parse');
+const fs = require('fs');
 
 const origin = process.env['api_origin'];
 const target = process.env['test_origin'];
@@ -13,8 +13,6 @@ const verbose = process.env['verbose'] == 'true';
 let projectId;
 
 if (verbose) {
-  console.log('jwt_token=' + process.env['jwt_token']);
-  console.log('git_token=' + process.env['git_token']);
   console.log('Retrieving repo_id...');
 }
 
@@ -78,11 +76,20 @@ function getProjectId(repoId) {
           })
           .then(res => res.json())
           .then(json => {
-              if (verbose) {
-                console.log('collection json is:');
-                console.log(json.data);
-              }
-              runNewman(json.data);
+            if (json.message != 'success') {
+              throw Error(JSON.stringify(json));
+            }
+            data = json.data;
+            if (verbose) {
+              console.log('collection json is:');
+              console.log(data);
+            }
+            const filename = 'collection.json';
+            fs.writeFileSync(filename, data.toString());
+            runNewman(filename);
+          })
+          .catch(err => {
+            console.error(err);
           });
       });
 }
@@ -91,11 +98,14 @@ function buildOptions(path) {
     return { host, port, path, headers }
 }
 
-function runNewman(collection) {
+function runNewman(filename) {
+    options = { collection: require('./' + filename) }
+    if (verbose) options['reporters'] = 'cli';
     newman.run({
-        collection: new Collection(collection)
+        collection: require('./' + filename) 
     }, (err, summary) => {
         if (err) { throw err; }
+        fs.unlink(filename, () => {});
         if (verbose) {
           console.log('assertions is:');
           console.log(summary.run.stats.assertions);
