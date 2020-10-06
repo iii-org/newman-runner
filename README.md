@@ -13,3 +13,9 @@ $ docker run \
   --env test_origin=http://127.0.0.1:10010 \ # Origin of the server to be tested
   iiiorg/newman-runner
 ```
+
+## Note
+The working directory must be as same as the `app.js`.
+
+## Change User
+
