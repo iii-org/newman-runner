@@ -101,9 +101,7 @@ function buildOptions(path) {
 function runNewman(filename) {
     options = { collection: require('./' + filename) }
     if (verbose) options['reporters'] = 'cli';
-    newman.run({
-        collection: require('./' + filename) 
-    }, (err, summary) => {
+    newman.run(options, (err, summary) => {
         if (err) { throw err; }
         fs.unlink(filename, () => {});
         if (verbose) {
