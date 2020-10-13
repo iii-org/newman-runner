@@ -11,11 +11,17 @@ $ docker run \
   --env git_token=<gitlab-access-token> \ # The admin's personal access token able to access all user projects. Needed scope is "api".
   --env api_origin=http://127.0.0.1:10009 \ # Origin of api server
   --env test_origin=http://127.0.0.1:10010 \ # Origin of the server to be tested
+  --env git_branch=master \ # Only if you need collection file execution, indicate to the branch collection file exists
   iiiorg/newman-runner
 ```
 
 ## Note
 The working directory must be as same as the `app.js`.
+
+## Use postman json file
+Files must be `$GIT_ROOT/iiidevops/postman_collection.json` and `$GIT_ROOT/iiidevops/postman_environment.json`. Both are required.
+Also, you must use a postman environment variable named `test_origin` as the origin part of requests.
+E.g. An API URL should looks like: `{{test_origin}}/user/login?token={{token}}`. You don't need to define `test_origin` in the environment file.
 
 ## Change User
 
