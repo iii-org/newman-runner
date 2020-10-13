@@ -23,7 +23,7 @@ Files must be `$GIT_ROOT/iiidevops/postman_collection.json` and `$GIT_ROOT/iiide
 
 Also, you must use a postman environment variable named `test_origin` as the origin part of requests.
 
-E.g. An API URL should looks like: `{{test_origin}}/user/login?token={{token}}`. You don't need to define `test_origin` in the environment file.
+E.g. An API URL should looks like: `{{test_origin}}/user/login?...`. You should not define `test_origin` in the environment file.
 
 ## Change User
 
