@@ -6,7 +6,7 @@ const fs = require('fs');
 
 const COLLECTION_FNAME = 'postman_collection.json';
 const ENVIRONMENT_FNAME = 'postman_environment.json'
-const STORAGE_PREFIX = 'iiidevops/';
+const STORAGE_PREFIX = 'iiidevops/postman/';
 
 const origin = process.env['api_origin'];
 const target = process.env['test_origin'];
