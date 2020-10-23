@@ -226,6 +226,7 @@ function uploadResult(projectId, total, failed, report) {
   params.append('project_id', projectId);
   params.append('total', total);
   params.append('fail', failed);
+  params.append('branch', git.branch);
   params.append('report', report);
   fetch(
     `${origin}/testResults`,
