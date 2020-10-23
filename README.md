@@ -25,5 +25,62 @@ Also, you must use a postman environment variable named `test_origin` as the ori
 
 E.g. An API URL should looks like: `{{test_origin}}/user/login?...`. You should not define `test_origin` in the environment file.
 
+## Report
+Execution report will be stored in the db column `report` as a JSON string.
+<details><summary>Example</summary>
+
+```
+{
+   "in_db":{
+      "assertions":{
+         "total":0,
+         "pending":0,
+         "failed":0
+      },
+      "executions":[
+         
+      ]
+   },
+   "json_file":{
+      "assertions":{
+         "total":3,
+         "pending":0,
+         "failed":1
+      },
+      "executions":[
+         {
+            "name":"login_AM",
+            "method":"POST",
+            "path":"user/login",
+            "assertions":[
+               
+            ]
+         },
+         {
+            "name":"Project list",
+            "method":"GET",
+            "path":"project/list",
+            "assertions":[
+               {
+                  "assertion":"success test"
+               },
+               {
+                  "assertion":"message test"
+               },
+               {
+                  "assertion":"this should fail",
+                  "error_message":"expected 'success' to deeply equal 'failed'"
+               }
+            ]
+         }
+      ]
+   }
+}
+```
+
+</details>
+`in_db` stands for tests in database, and `json_file` stands for the tests by postman collections in the repository.
+
+Each item in `executions.assertions` will only contain `error_message` key when the test has an error. If it does not, it is a successful assertion.
 ## Change User
 
