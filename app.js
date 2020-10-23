@@ -22,7 +22,8 @@ const global = {
   repoId: -1,
   projectId: -1,
   total: 0,
-  failed: 0
+  failed: 0,
+  report: {}
 }
 
 if (verbose) {
@@ -115,12 +116,38 @@ function runNewmanInAPIDB(filename) {
     if (err) {
       throw err;
     }
+    global.report.in_db = reduceSummary(summary);
     fs.unlink(filename, () => {
     });
     global.total = summary.run.stats.assertions.total;
     global.failed = summary.run.stats.assertions.failed;
     checkCollectionFile();
   });
+}
+
+function reduceSummary(s) {
+  ret = {};
+  ret.assertions = s.run.stats.assertions;
+  ret.executions = [];
+  for (let i in s.run.executions) {
+    const e = s.run.executions[i];
+    const re = {};
+    re.name = e.item.name;
+    re.method = e.request.method;
+    re.path = e.request.url.path.join('/');
+    re.assertions = [];
+    for (let j in e.assertions) {
+      const a = e.assertions[j];
+      const ra = {};
+      ra.assertion = a.assertion;
+      if (a.error) {
+        ra.error_message = a.error.message;
+      }
+      re.assertions.push(ra);
+    }
+    ret.executions.push(re);
+  }
+  return ret;
 }
 
 function gitFileAPIUrl(path) {
@@ -180,19 +207,26 @@ function runNewmanByJSON() {
     if (err) {
       throw err;
     }
+    global.report.json_file = reduceSummary(summary);
+    if (verbose) {
+      console.log('report is:');
+      console.log(JSON.stringify(global.report);
+    }
     global.total += summary.run.stats.assertions.total;
     global.failed += summary.run.stats.assertions.failed;
     fs.unlink('./' + COLLECTION_FNAME, () => {});
     fs.unlink('./' + ENVIRONMENT_FNAME, () => {});
-    uploadResult(global.projectId, global.total, global.failed)
+    uploadResult(global.projectId, global.total, 
+        global.failed, global.report)
   });
 }
 
-function uploadResult(projectId, total, failed) {
+function uploadResult(projectId, total, failed, report) {
   const params = new URLSearchParams();
   params.append('project_id', projectId);
   params.append('total', total);
   params.append('fail', failed);
+  params.append('report', report);
   fetch(
     `${origin}/testResults`,
     {
