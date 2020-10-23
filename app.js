@@ -210,7 +210,7 @@ function runNewmanByJSON() {
     global.report.json_file = reduceSummary(summary);
     if (verbose) {
       console.log('report is:');
-      console.log(JSON.stringify(global.report);
+      console.log(JSON.stringify(global.report));
     }
     global.total += summary.run.stats.assertions.total;
     global.failed += summary.run.stats.assertions.failed;
