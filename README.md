@@ -29,7 +29,7 @@ E.g. An API URL should looks like: `{{test_origin}}/user/login?...`. You should 
 Execution report will be stored in the db column `report` as a JSON string.
 <details><summary>Example</summary>
 
-```
+```json
 {
    "in_db":{
       "assertions":{
@@ -83,5 +83,4 @@ Execution report will be stored in the db column `report` as a JSON string.
 `in_db` stands for tests in database, and `json_file` stands for the tests by postman collections in the repository.
 
 Each item in `executions.assertions` will only contain `error_message` key when the test has an error. If it does not, it is a successful assertion.
-## Change User
 
