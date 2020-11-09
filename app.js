@@ -217,7 +217,7 @@ function runNewmanByJSON() {
     fs.unlink('./' + COLLECTION_FNAME, () => {});
     fs.unlink('./' + ENVIRONMENT_FNAME, () => {});
     uploadResult(global.projectId, global.total, 
-        global.failed, global.report)
+        global.failed, JSON.stringify(global.report));
   });
 }
 

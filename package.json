@@ -1,6 +1,6 @@
 {
   "name": "newman-runner",
-  "version": "1.1.0",
+  "version": "1.6.0",
   "description": "Run newman test assertions then push back to api server",
   "main": "app.js",
   "author": "Romulus Urakagi Tsai",
