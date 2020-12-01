@@ -10,7 +10,6 @@ const STORAGE_PREFIX = 'iiidevops/postman/';
 
 const origin = process.env['api_origin'];
 const target = process.env['test_origin'];
-const headers = {Authorization: `Bearer ${process.env['jwt_token']}`}
 const git = {
   url: process.env['git_url'],
   pUrl: parse(process.env['git_url']),
@@ -19,6 +18,7 @@ const git = {
 } 
 const verbose = process.env['verbose'] == 'true';
 const global = {
+  jwtToken: null,
   repoId: -1,
   projectId: -1,
   total: 0,
@@ -27,18 +27,32 @@ const global = {
 }
 
 if (verbose) {
-  console.log('Retrieving repo_id...');
+  console.log('Log into API server...');
 }
 
-getGitlabProjectId(1)
-  .then(id => {
-    if (verbose) console.log('repo_id is ' + id);
-    global.repoId = id;
-    getProjectId(id);
-  })
-  .catch(err => {
-    console.error(err);
-  });
+const params = new URLSearchParams();
+params.append('username', process.env['username']);
+params.append('password', process.env['password']);
+fetch(`${origin}/user/login`, {
+  method: 'POST',
+  body: params
+})
+.then(res => res.json())
+.then(json => {
+  global.jwtToken = json.data.token;
+  if (verbose) {
+    console.log('Retrieving repo_id...');
+  }
+  getGitlabProjectId(1)
+    .then(id => {
+      if (verbose) console.log('repo_id is ' + id);
+      global.repoId = id;
+      getProjectId(id);
+    })
+    .catch(err => {
+      console.error(err);
+    });
+});
 
 function getGitlabProjectId(page) {
   return new Promise((resolve, reject) => {
@@ -77,7 +91,7 @@ function getGitlabProjectId(page) {
 function getProjectId(repoId) {
   fetch(`${origin}/repositories/${repoId}/id`, {
     method: 'GET',
-    headers: headers
+    headers: {Authorization: `Bearer ${global.jwtToken}`}
   })
     .then(res => res.json())
     .then(json => {
@@ -87,7 +101,7 @@ function getProjectId(repoId) {
           encodeURIComponent(target)}`,
         {
           method: 'GET',
-          headers: headers
+          headers: {Authorization: `Bearer ${global.jwtToken}`}
         })
         .then(res => res.json())
         .then(json => {
@@ -100,7 +114,7 @@ function getProjectId(repoId) {
             console.log(data);
           }
           const filename = 'collection.json';
-          fs.writeFileSync(filename, data.toString());
+          fs.writeFileSync(filename, JSON.stringify(data));
           runNewmanInAPIDB(filename);
         })
         .catch(err => {
@@ -232,7 +246,7 @@ function uploadResult(projectId, total, failed, report) {
     `${origin}/testResults`,
     {
       method: 'POST',
-      headers,
+      headers: {Authorization: `Bearer ${global.jwtToken}`},
       body: params
     })
     .then(res => res.json())
