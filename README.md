@@ -10,7 +10,6 @@ $ docker run \
   --env username=<username on API server> \
   --env password=<password on API server> \
   --env git_url=http://10.50.1.53/root/rotest.git \ # Repo .git URL of gitlab
-  --env git_token=<gitlab-access-token> \ # The admin's personal access token able to access all user projects. Needed scope is "api".
   --env api_origin=http://127.0.0.1:10009 \ # Origin of api server
   --env test_origin=http://127.0.0.1:10010 \ # Origin of the server to be tested
   --env git_branch=master \ # Indicates the tested branch name 
