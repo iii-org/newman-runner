@@ -12,7 +12,8 @@ $ docker run \
   --env git_token=<gitlab-access-token> \ # The admin's personal access token able to access all user projects. Needed scope is "api".
   --env api_origin=http://127.0.0.1:10009 \ # Origin of api server
   --env test_origin=http://127.0.0.1:10010 \ # Origin of the server to be tested
-  --env git_branch=master \ # Only if you need collection file execution, indicate to the branch collection file exists
+  --env git_branch=master \ # Indicates the tested branch name 
+  --env git_commit_id=aec8d49b \ # Indicates the tested commit
   iiiorg/newman-runner
 ```
 
