@@ -5,6 +5,7 @@ CI/CD tool for devops-system test feature using newman. It will retrieve data fr
 ```bash
 $ docker pull iiiorg/newman-runner
 # Or use .env file by docker run --env-file=.env
+$ ln -s <Directory want to be scanned> repo
 $ docker run \ 
   --env username=<username on API server> \
   --env password=<password on API server> \
