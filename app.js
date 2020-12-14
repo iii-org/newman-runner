@@ -36,7 +36,10 @@ function apiGet(path, headers) {
     fetch(process.env['api_origin'] + path, opts)
       .then(res => res.json())
       .then(json => resolve(json))
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
   })
 }
 
@@ -54,7 +57,10 @@ function apiPost(path, headers, body) {
     fetch(process.env['api_origin'] + path, opts)
       .then(res => res.json())
       .then(json => resolve(json))
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
   })
 }
 
