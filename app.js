@@ -21,6 +21,7 @@ const global = {
   jwtToken: null,
   repoId: -1,
   projectId: -1,
+  scanId: null,
   total: 0,
   failed: 0,
   report: {}
@@ -73,32 +74,65 @@ apiPost('/user/login', null, {
   password: process.env['password']
 }).then(json => {
   global.jwtToken = json.data.token;
+  retrieveRepoId();
+});
+
+function retrieveRepoId() {
   if (verbose) console.log('Retrieving repo_id...');
   apiGet(`/repositories/id?repository_url=${git.url}`)
     .then(json => {
       global.projectId = json.data.project_id;
       global.repoId = json.data.repository_id;
       if (verbose) console.log('repo_id is ' + global.repoId);
-      apiGet(`/export_to_postman/${global.projectId}?target=${
-        encodeURIComponent(target)}`)
-        .then(json => {
-          if (json.message !== 'success') {
-            throw Error(JSON.stringify(json));
-          }
-          const data = json.data;
-          if (verbose) {
-            console.log('collection json is:');
-            console.log(data);
-          }
-          const filename = 'collection.json';
-          fs.writeFileSync(filename, JSON.stringify(data));
-          runNewmanInAPIDB(filename);
-        })
-        .catch(err => {
-          console.error(err);
-        });
+      createScan(global.projectId);
     })
-});
+}
+
+function createScan(projectId) {
+  const params = new URLSearchParams();
+  params.append('project_id', projectId);
+  params.append('branch', git.branch);
+  params.append('commit_id', git.commit_id);
+  fetch(
+    `${origin}/testResults`,
+    {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${global.jwtToken}`},
+      body: params
+    })
+    .then(res => res.json())
+    .then(json => {
+      if (json.message == 'success') {
+        global.scanId = json.data['scan_id'];
+        getCollection();
+      } else {
+        console.log("Error while executing, response=");
+        console.log(json);
+        process.exit(1);
+      }
+    });
+}
+
+function getCollection() {
+  apiGet(`/export_to_postman/${global.projectId}?target=${
+    encodeURIComponent(target)}`)
+    .then(json => {
+      if (json.message !== 'success') {
+        throw Error(JSON.stringify(json));
+      }
+      const data = json.data;
+      if (verbose) {
+        console.log('collection json is:');
+        console.log(data);
+      }
+      const filename = 'collection.json';
+      fs.writeFileSync(filename, JSON.stringify(data));
+      runNewmanInAPIDB(filename);
+    })
+    .catch(err => {
+      console.error(err);
+    });
+}
 
 function runNewmanInAPIDB(filename) {
   const options = {collection: require('./' + filename)}
@@ -145,14 +179,14 @@ function checkCollectionFile() {
   const collectionPath = STORAGE_PREFIX + COLLECTION_FNAME;
   if (!fs.existsSync(collectionPath)) {
     if (verbose) console.log('No collection file found.');
-    uploadResult(global.projectId, global.total, global.failed)
+    uploadResult();
     return;
   }
   if (verbose) console.log("Collection file found.");
   const environmentPath = STORAGE_PREFIX + ENVIRONMENT_FNAME;
   if (!fs.existsSync(environmentPath)) {
     if (verbose) console.log('No environment file found.');
-    uploadResult(global.projectId, global.total, global.failed)
+    uploadResult();
     return;
   }
   if (verbose) console.log("Environment file found.");
@@ -178,27 +212,25 @@ function runNewmanByJSON() {
     }
     global.total += summary.run.stats.assertions.total;
     global.failed += summary.run.stats.assertions.failed;
-    fs.unlink('./' + COLLECTION_FNAME, () => {
-    });
-    fs.unlink('./' + ENVIRONMENT_FNAME, () => {
-    });
-    uploadResult(global.projectId, global.total,
-      global.failed, JSON.stringify(global.report));
+    uploadResult();
   });
 }
 
-function uploadResult(projectId, total, failed, report) {
+function uploadResult() {
+  const projectId = global.projectId;
+  const total = global.total;
+  const failed = global.failed;
+  const report = JSON.stringify(global.report);
   const params = new URLSearchParams();
+  params.append('scan_id', global.scanId);
   params.append('project_id', projectId);
   params.append('total', total);
   params.append('fail', failed);
-  params.append('branch', git.branch);
-  params.append('commit_id', git.commit_id);
   params.append('report', report);
   fetch(
     `${origin}/testResults`,
     {
-      method: 'POST',
+      method: 'PUT',
       headers: {Authorization: `Bearer ${global.jwtToken}`},
       body: params
     })
