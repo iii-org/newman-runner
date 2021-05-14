@@ -21,7 +21,8 @@ $ docker run \
 The working directory must be as same as the `app.js`.
 
 ## Use postman json file
-Files must be `$GIT_ROOT/iiidevops/postman/postman_collection.json` and `$GIT_ROOT/iiidevops/postman/postman_environment.json`. Both are required.
+Collection and environment files must be in `$GIT_ROOT/iiidevops/postman/` and  named like `Foo.postman_collection.json` or `Bar.postman_collection.json`. This is the default export name of the Postman UI.
+The environment file should be named as the same prefix as the collection uses it, like `Foo.postman_environment.json`. If a collection does not find an environment file with the same name, a random environment file will be used. Thus, if you only need one environment, you can just put an env file in the directory like `default.postman_environment.json` so all collections will use it.
 
 Also, you must use a postman environment variable named `test_origin` as the origin part of requests.
 
@@ -44,38 +45,74 @@ Execution report will be stored in the db column `report` as a JSON string.
       ]
    },
    "json_file":{
-      "assertions":{
-         "total":3,
-         "pending":0,
-         "failed":1
-      },
-      "executions":[
-         {
-            "name":"login_AM",
-            "method":"POST",
-            "path":"user/login",
-            "assertions":[
-               
-            ]
-         },
-         {
-            "name":"Project list",
-            "method":"GET",
-            "path":"project/list",
-            "assertions":[
-               {
-                  "assertion":"success test"
-               },
-               {
-                  "assertion":"message test"
-               },
-               {
-                  "assertion":"this should fail",
-                  "error_message":"expected 'success' to deeply equal 'failed'"
-               }
-            ]
-         }
-      ]
+      "Foo": {
+		  "assertions":{
+			 "total":3,
+			 "pending":0,
+			 "failed":1
+		  },
+		  "executions":[
+			 {
+				"name":"login_AM",
+				"method":"POST",
+				"path":"user/login",
+				"assertions":[
+				   
+				]
+			 },
+			 {
+				"name":"Project list",
+				"method":"GET",
+				"path":"project/list",
+				"assertions":[
+				   {
+					  "assertion":"success test"
+				   },
+				   {
+					  "assertion":"message test"
+				   },
+				   {
+					  "assertion":"this should fail",
+					  "error_message":"expected 'success' to deeply equal 'failed'"
+				   }
+				]
+			 }
+		  ]
+	  },
+	  "Bar": {
+		  "assertions":{
+			 "total":3,
+			 "pending":0,
+			 "failed":1
+		  },
+		  "executions":[
+			 {
+				"name":"login_AM",
+				"method":"POST",
+				"path":"user/login",
+				"assertions":[
+				   
+				]
+			 },
+			 {
+				"name":"Project list",
+				"method":"GET",
+				"path":"project/list",
+				"assertions":[
+				   {
+					  "assertion":"success test"
+				   },
+				   {
+					  "assertion":"message test"
+				   },
+				   {
+					  "assertion":"this should fail",
+					  "error_message":"expected 'success' to deeply equal 'failed'"
+				   }
+				]
+			 }
+		  ]
+	  }
    }
 }
 ```
