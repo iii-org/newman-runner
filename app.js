@@ -4,8 +4,8 @@ const newman = require('newman');
 const parse = require('url-parse');
 const fs = require('fs');
 
-const COLLECTION_FNAME = 'postman_collection.json';
-const ENVIRONMENT_FNAME = 'postman_environment.json'
+const COLLECTION_SUFFIX = 'postman_collection.json';
+const ENVIRONMENT_SUFFIX = 'postman_environment.json'
 const STORAGE_PREFIX = 'repo/iiidevops/postman/';
 
 const origin = process.env['api_origin'];
@@ -24,7 +24,7 @@ const global = {
   scanId: null,
   total: 0,
   failed: 0,
-  report: {}
+  report: {json_file: {}}
 }
 
 function apiGet(path, headers) {
@@ -176,28 +176,50 @@ function reduceSummary(s) {
 }
 
 function checkCollectionFile() {
-  const collectionPath = STORAGE_PREFIX + COLLECTION_FNAME;
-  if (!fs.existsSync(collectionPath)) {
-    if (verbose) console.log('No collection file found.');
-    uploadResult();
-    return;
+  files = fs.readdirSync(STORAGE_PREFIX);
+  // First decide default environment file
+  let defaultEnvFile = null;
+  for (const file of files) {
+    if (file.endsWith(ENVIRONMENT_SUFFIX)) {
+      defaultEnvFile = file;
+    }
   }
-  if (verbose) console.log("Collection file found.");
-  const environmentPath = STORAGE_PREFIX + ENVIRONMENT_FNAME;
-  if (!fs.existsSync(environmentPath)) {
+  if (verbose) {
+    console.log(`Default env file is ${defaultEnvFile}`)
+  }
+  if (defaultEnvFile == null) {
     if (verbose) console.log('No environment file found.');
     uploadResult();
     return;
   }
-  if (verbose) console.log("Environment file found.");
-  runNewmanByJSON();
+
+  for (const file of files) {
+    if (file.endsWith(COLLECTION_SUFFIX)) {
+      const name = file.substring(0, file.length - COLLECTION_SUFFIX.length);
+      let envFile = name + ENVIRONMENT_SUFFIX;
+      if (!fs.existsSync(envFile)) {
+        envFile = defaultEnvFile;
+      }
+      let displayName = name
+      if (name.endsWith('.')) {
+        displayName = name.substring(0, name.length - 1);
+      }
+      if (verbose) {
+        console.log('Collection file is', name);
+        console.log('Env file is', envFile);
+      }
+      runNewmanByJSON(file, envFile, displayName);
+    }
+  }
 }
 
-function runNewmanByJSON() {
-  if (verbose) console.log("Running newman for json files...");
+function runNewmanByJSON(file, envFile, displayName) {
+  if (verbose) {
+    console.log("Running newman for json files...");
+  }
   const options = {
-    collection: STORAGE_PREFIX + COLLECTION_FNAME,
-    environment: STORAGE_PREFIX + ENVIRONMENT_FNAME,
+    collection: STORAGE_PREFIX + file,
+    environment: STORAGE_PREFIX + envFile,
     envVar: [{key: 'test_origin', value: target}]
   }
   if (verbose) options['reporters'] = 'cli';
@@ -205,7 +227,7 @@ function runNewmanByJSON() {
     if (err) {
       throw err;
     }
-    global.report.json_file = reduceSummary(summary);
+    global.report.json_file[displayName] = reduceSummary(summary);
     if (verbose) {
       console.log('report is:');
       console.log(JSON.stringify(global.report));
