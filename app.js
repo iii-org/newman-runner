@@ -27,6 +27,8 @@ const global = {
   report: {json_file: {}}
 }
 
+const runCheck = {}
+
 function apiGet(path, headers) {
   return new Promise((resolve, reject) => {
     if (!headers) {
@@ -193,49 +195,57 @@ function checkCollectionFile() {
     return;
   }
 
+  const handlers = []
   for (const file of files) {
-    if (file.endsWith(COLLECTION_SUFFIX)) {
-      const name = file.substring(0, file.length - COLLECTION_SUFFIX.length);
-      let envFile = name + ENVIRONMENT_SUFFIX;
-      if (!fs.existsSync(envFile)) {
-        envFile = defaultEnvFile;
-      }
-      let displayName = name
-      if (name.endsWith('.')) {
-        displayName = name.substring(0, name.length - 1);
-      }
-      if (verbose) {
-        console.log('Collection file is', name);
-        console.log('Env file is', envFile);
-      }
-      runNewmanByJSON(file, envFile, displayName);
+    if (!file.endsWith(COLLECTION_SUFFIX)) {
+      continue;
     }
+    const name = file.substring(0, file.length - COLLECTION_SUFFIX.length);
+    let envFile = name + ENVIRONMENT_SUFFIX;
+    if (!fs.existsSync(envFile)) {
+      envFile = defaultEnvFile;
+    }
+    let displayName = name
+    if (name.endsWith('.')) {
+      displayName = name.substring(0, name.length - 1);
+    }
+    if (verbose) {
+      console.log('Collection file is', name);
+      console.log('Env file is', envFile);
+    }
+    handlers.push(runNewmanByJSON(file, envFile, displayName));
   }
+  Promise.all(handlers).then(() => {
+    uploadResult();
+  })
 }
 
 function runNewmanByJSON(file, envFile, displayName) {
-  if (verbose) {
-    console.log("Running newman for json files...");
-  }
-  const options = {
-    collection: STORAGE_PREFIX + file,
-    environment: STORAGE_PREFIX + envFile,
-    envVar: [{key: 'test_origin', value: target}]
-  }
-  if (verbose) options['reporters'] = 'cli';
-  newman.run(options, (err, summary) => {
-    if (err) {
-      throw err;
-    }
-    global.report.json_file[displayName] = reduceSummary(summary);
+  return new Promise((resolve, reject) => {
     if (verbose) {
-      console.log('report is:');
-      console.log(JSON.stringify(global.report));
+      console.log("Running newman for json files...");
     }
-    global.total += summary.run.stats.assertions.total;
-    global.failed += summary.run.stats.assertions.failed;
-    uploadResult();
-  });
+    runCheck[file] = false;
+    const options = {
+      collection: STORAGE_PREFIX + file,
+      environment: STORAGE_PREFIX + envFile,
+      envVar: [{key: 'test_origin', value: target}]
+    }
+    if (verbose) options['reporters'] = 'cli';
+    newman.run(options, (err, summary) => {
+      if (err) {
+        throw err;
+      }
+      global.report.json_file[displayName] = reduceSummary(summary);
+      if (verbose) {
+        console.log('report is:');
+        console.log(JSON.stringify(global.report));
+      }
+      global.total += summary.run.stats.assertions.total;
+      global.failed += summary.run.stats.assertions.failed;
+      resolve();
+    });
+  })
 }
 
 function uploadResult() {
