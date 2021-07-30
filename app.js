@@ -85,7 +85,7 @@ function checkPluginDisabled(pluginName) {
     for (const d of data) {
       if (d.name === pluginName) {
         if (d.disabled) {
-          console.log('Checkmarx plugin is disabled.')
+          console.log('Postman plugin is disabled.')
           process.exit(0)
         }
       }
