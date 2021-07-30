@@ -76,8 +76,23 @@ apiPost('/user/login', null, {
   password: process.env['password']
 }).then(json => {
   global.jwtToken = json.data.token;
-  retrieveRepoId();
+  checkPluginDisabled('postman');
 });
+
+function checkPluginDisabled(pluginName) {
+  apiGet('/plugins').then(json => {
+    const data = json.data
+    for (const d of data) {
+      if (d.name === pluginName) {
+        if (d.disabled) {
+          console.log('Checkmarx plugin is disabled.')
+          process.exit(0)
+        }
+      }
+    }
+    retrieveRepoId()
+  })
+}
 
 function retrieveRepoId() {
   if (verbose) console.log('Retrieving repo_id...');
